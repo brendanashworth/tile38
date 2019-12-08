@@ -47,7 +47,7 @@ type Collection struct {
 	values      *btree.BTree    // items sorted by value+key
 	fieldMap    map[string]int
 	fieldArr    []string
-	fieldValues map[string][]float64
+	fieldValues map[string]*itemFields
 	weight      int
 	points      int
 	objects     int // geometry count
@@ -59,27 +59,13 @@ var counter uint64
 // New creates an empty collection
 func New() *Collection {
 	col := &Collection{
-		index:    geoindex.Wrap(&rbang.RTree{}),
-		values:   btree.New(32, nil),
-		fieldMap: make(map[string]int),
-		fieldArr: make([]string, 0),
+		index:       geoindex.Wrap(&rbang.RTree{}),
+		values:      btree.New(32, nil),
+		fieldMap:    make(map[string]int),
+		fieldArr:    make([]string, 0),
+		fieldValues: make(map[string]*itemFields),
 	}
 	return col
-}
-
-func (c *Collection) setFieldValues(id string, values []float64) {
-	if c.fieldValues == nil {
-		c.fieldValues = make(map[string][]float64)
-	}
-	c.fieldValues[id] = values
-}
-func (c *Collection) getFieldValues(id string) (values []float64) {
-	return c.fieldValues[id]
-}
-func (c *Collection) deleteFieldValues(id string) {
-	if c.fieldValues != nil {
-		delete(c.fieldValues, id)
-	}
 }
 
 // Count returns the number of objects in collection.
@@ -123,7 +109,7 @@ func (c *Collection) objWeight(item *itemT) int {
 	} else {
 		weight = len(item.obj.String())
 	}
-	return weight + len(c.getFieldValues(item.id))*8 + len(item.id)
+	return weight + c.itemFields(item.id).weight() + len(item.id)
 }
 
 func (c *Collection) indexDelete(item *itemT) {
@@ -146,6 +132,18 @@ func (c *Collection) indexInsert(item *itemT) {
 	}
 }
 
+func (c *Collection) getFieldValues(id string) (fields []float64) {
+	item := c.itemFields(id)
+
+	fields = make([]float64, len(c.fieldMap))
+	// We don't need the string associated with the field.
+	for i := 0; i < len(c.fieldMap); i++ {
+		fields[i] = item.getField(i)
+	}
+
+	return fields
+}
+
 // Set adds or replaces an object in the collection and returns the fields
 // array. If an item with the same id is already in the collection then the
 // new item will adopt the old item's fields.
@@ -154,7 +152,7 @@ func (c *Collection) indexInsert(item *itemT) {
 func (c *Collection) Set(
 	id string, obj geojson.Object, fields []string, values []float64,
 ) (
-	oldObject geojson.Object, oldFields []float64, newFields []float64,
+	oldObject geojson.Object,
 ) {
 	newItem := &itemT{id: id, obj: obj}
 
@@ -179,8 +177,6 @@ func (c *Collection) Set(
 
 		// references
 		oldObject = oldItem.obj
-		oldFields = c.getFieldValues(id)
-		newFields = oldFields
 	}
 	// insert the new item into the rtree or strings tree.
 	if objIsSpatial(newItem.obj) {
@@ -199,20 +195,41 @@ func (c *Collection) Set(
 
 	if fields == nil {
 		if len(values) > 0 {
-			// directly set the field values, update weight
-			c.weight -= len(newFields) * 8
-			newFields = values
-			c.setFieldValues(id, newFields)
-			c.weight += len(newFields) * 8
+			fieldValues := c.itemFields(id)
+
+			// set all of the fields we have and reset the weight
+			// it takes to store those fields
+			c.weight -= fieldValues.weight()
+
+			var numFields int = len(fields)
+			// doing ks like this might seem dull, but it should
+			// be faster in execution
+			var ks []int = make([]int, numFields)
+			for i := 0; i < numFields; i++ {
+				ks[i] = i
+			}
+			fieldValues.setFields(ks, values)
+
+			c.weight += fieldValues.weight()
 		}
 	} else {
 		// map field name to value
-		for i, field := range fields {
-			c.setField(newItem, field, values[i])
+		fieldValues := c.itemFields(id)
+
+		c.weight -= fieldValues.weight()
+
+		// create a mapping between the string fields and their
+		// integer pairings, then multiple set them
+		var numFields int = len(fields)
+		var ks []int = make([]int, numFields)
+		for i := 0; i < numFields; i++ {
+			ks[i] = c.mapField(fields[i])
 		}
-		newFields = c.getFieldValues(id)
+		fieldValues.setFields(ks, values)
+
+		c.weight += fieldValues.weight()
 	}
-	return oldObject, oldFields, newFields
+	return oldObject
 }
 
 // Delete removes an object and returns it.
@@ -234,11 +251,12 @@ func (c *Collection) Delete(id string) (
 		c.values.Delete(oldItem)
 		c.nobjects--
 	}
+	// objWeight should include field weights
 	c.weight -= c.objWeight(oldItem)
 	c.points -= oldItem.obj.NumPoints()
+	delete(c.fieldValues, id)
 
 	fields = c.getFieldValues(id)
-	c.deleteFieldValues(id)
 	return oldItem.obj, fields, true
 }
 
@@ -265,7 +283,10 @@ func (c *Collection) SetField(id, field string, value float64) (
 		return nil, nil, false, false
 	}
 	item := itemV.(*itemT)
-	updated = c.setField(item, field, value)
+
+	fieldValues := c.itemFields(id)
+	k := c.mapField(field)
+	updated = fieldValues.setField(k, value)
 	return item.obj, c.getFieldValues(id), updated, true
 }
 
@@ -278,33 +299,45 @@ func (c *Collection) SetFields(
 		return nil, nil, 0, false
 	}
 	item := itemV.(*itemT)
+
+	fieldValues := c.itemFields(id)
+
 	for idx, field := range inFields {
-		if c.setField(item, field, inValues[idx]) {
+		k := c.mapField(field)
+		if fieldValues.setField(k, inValues[idx]) {
 			updatedCount++
 		}
 	}
 	return item.obj, c.getFieldValues(id), updatedCount, true
 }
 
-func (c *Collection) setField(item *itemT, field string, value float64) (
-	updated bool,
-) {
+func (c *Collection) mapField(field string) int {
 	idx, ok := c.fieldMap[field]
 	if !ok {
 		idx = len(c.fieldMap)
 		c.fieldMap[field] = idx
 		c.addToFieldArr(field)
 	}
-	fields := c.getFieldValues(item.id)
-	c.weight -= len(fields) * 8
-	for idx >= len(fields) {
-		fields = append(fields, 0)
+
+	return idx
+}
+
+func (c *Collection) itemFields(id string) *itemFields {
+	fields, ok := c.fieldValues[id]
+	if ok {
+		return fields
 	}
-	c.weight += len(fields) * 8
-	ovalue := fields[idx]
-	fields[idx] = value
-	c.setFieldValues(item.id, fields)
-	return ovalue != value
+
+	c.fieldValues[id] = &itemFields{}
+	return c.fieldValues[id]
+}
+
+func (c *Collection) setField(item *itemT, field string, value float64) (
+	updated bool,
+) {
+	fieldValues := c.itemFields(item.id)
+	k := c.mapField(field)
+	return fieldValues.setField(k, value)
 }
 
 // FieldMap return a maps of the field names.

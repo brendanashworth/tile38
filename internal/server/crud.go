@@ -779,7 +779,7 @@ func (server *Server) cmdSet(msg *Message, resetExpires bool) (res resp.Value, d
 	if resetExpires {
 		server.clearIDExpires(d.key, d.id)
 	}
-	d.oldObj, d.oldFields, d.fields = col.Set(d.id, d.obj, fields, values)
+	d.oldObj = col.Set(d.id, d.obj, fields, values)
 	d.command = "set"
 	d.updated = true // perhaps we should do a diff on the previous object?
 	d.timestamp = time.Now()

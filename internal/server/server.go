@@ -59,7 +59,6 @@ type commandDetails struct {
 	obj       geojson.Object    // new object
 	fields    []float64         // array of field values
 	oldObj    geojson.Object    // previous object, if any
-	oldFields []float64         // previous object field values
 	updated   bool              // object was updated
 	timestamp time.Time         // timestamp when the update occured
 	parent    bool              // when true, only children are forwarded
