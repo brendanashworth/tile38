@@ -5,16 +5,16 @@ import (
 )
 
 // Storage for a single field takes:
-// 8 bytes to store the value (float64)
+// 4 bytes to store the value (float32)
 // 1 byte to index the value's location (uint8)
 // ~negligible/unknown size/overhead for bitset
 // and total overhead for each unique field value set for the hashmap above
 // effectively this means the weight of the item fields
-// is 9 * len(fieldIndexes) + size of bitset
+// is 5 * len(fieldIndexes) + size of bitset
 type itemFields struct {
 	fieldBitset  bitset.BitSet
 	fieldIndexes []uint8
-	fieldValues  []float64
+	fieldValues  []float32
 }
 
 // k maps to a string via fieldMap
@@ -33,7 +33,9 @@ func (i *itemFields) getField(k int) float64 {
 		// if fieldIndexes[j] == u, look at
 		// fieldValues[j]
 		if i.fieldIndexes[j] == u {
-			return i.fieldValues[j]
+			// We store it as float32, but coerce it
+			// back to float64 when retrieving.
+			return float64(i.fieldValues[j])
 		}
 	}
 
@@ -55,8 +57,8 @@ func (i *itemFields) setField(k int, val float64) bool {
 			// if fieldIndexes[j] == u, look at
 			// fieldValues[j]
 			if i.fieldIndexes[j] == u {
-				var old float64 = i.fieldValues[j]
-				i.fieldValues[j] = val
+				var old float64 = float64(i.fieldValues[j])
+				i.fieldValues[j] = float32(val)
 				// Only return true if the value is new.
 				return old != val
 			}
@@ -70,7 +72,7 @@ func (i *itemFields) setField(k int, val float64) bool {
 		// u = uint8(k)
 		// fieldIndexes points from k to val
 		i.fieldIndexes = append(i.fieldIndexes, u)
-		i.fieldValues = append(i.fieldValues, val)
+		i.fieldValues = append(i.fieldValues, float32(val))
 
 		// This should be true if the field was updated.
 		// Logically, this would always be true, but technically the
@@ -103,7 +105,7 @@ func (i *itemFields) setFields(ks []int, vals []float64) int {
 	// this could be separated into two segments, one for
 	// new fields and one for existing fields.
 	var newFields []uint8 = make([]uint8, numNewFields)
-	var newValues []float64 = make([]float64, numNewFields)
+	var newValues []float32 = make([]float32, numNewFields)
 
 	// the current running index inside the array
 	var j int
@@ -119,8 +121,8 @@ func (i *itemFields) setFields(ks []int, vals []float64) int {
 				// if fieldIndexes[search] == k, look at
 				// fieldValues[search]
 				if i.fieldIndexes[search] == target {
-					var old float64 = i.fieldValues[search]
-					i.fieldValues[search] = vals[z]
+					var old float64 = float64(i.fieldValues[search])
+					i.fieldValues[search] = float32(vals[z])
 
 					// Increment and break.
 					if old != vals[z] {
@@ -135,7 +137,7 @@ func (i *itemFields) setFields(ks []int, vals []float64) int {
 			// This is for setting new fields.
 			// index at offset + j for the new slice
 			newFields[j] = uint8(k)
-			newValues[j] = vals[z]
+			newValues[j] = float32(vals[z])
 
 			i.fieldBitset.Set(uint(k))
 
@@ -190,6 +192,6 @@ func (i *itemFields) deleteField(k int) {
 // Returns the number of bytes it takes to store
 // the fields for this item in memory.
 func (i *itemFields) weight() int {
-	// 8 for float64, 1 for uint8
-	return 9*len(i.fieldIndexes) + int(i.fieldBitset.BinaryStorageSize())
+	// 4 for float32, 1 for uint8
+	return 5*len(i.fieldIndexes) + int(i.fieldBitset.BinaryStorageSize())
 }
