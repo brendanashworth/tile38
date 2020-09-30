@@ -22,15 +22,15 @@ type fvt struct {
 	value float64
 }
 
-func orderFields(fmap map[string]int, farr []string, fields []float64) []fvt {
+func orderFields(fmap map[string]int, farr []string, fields *collection.ItemFields) []fvt {
 	var fv fvt
 	var idx int
 	fvs := make([]fvt, 0, len(fmap))
 	for _, field := range farr {
 		idx = fmap[field]
-		if idx < len(fields) {
+		if fields.GetField(idx) != 0 {
 			fv.field = field
-			fv.value = fields[idx]
+			fv.value = fields.GetField(idx)
 			if fv.value != 0 {
 				fvs = append(fvs, fv)
 			}
@@ -150,7 +150,8 @@ func (server *Server) cmdGet(msg *Message) (resp.Value, error) {
 		}
 		return NOMessage, errKeyNotFound
 	}
-	o, fields, ok := col.Get(id)
+	o, _, ok := col.Get(id)
+	fields := col.ItemFields(id)
 	ok = ok && !server.hasExpired(key, id)
 	if !ok {
 		if msg.OutputType == RESP {
@@ -344,7 +345,7 @@ func (server *Server) cmdPdel(msg *Message) (res resp.Value, d commandDetails, e
 		return
 	}
 	now := time.Now()
-	iter := func(id string, o geojson.Object, fields []float64) bool {
+	iter := func(id string, o geojson.Object, fields *collection.ItemFields) bool {
 		if match, _ := glob.Match(d.pattern, id); match {
 			d.children = append(d.children, &commandDetails{
 				command:   "del",

@@ -11,14 +11,14 @@ import (
 // and total overhead for each unique field value set for the hashmap above
 // effectively this means the weight of the item fields
 // is 5 * len(fieldIndexes) + size of bitset
-type itemFields struct {
+type ItemFields struct {
 	fieldBitset  bitset.BitSet
 	fieldIndexes []uint8
 	fieldValues  []float32
 }
 
 // k maps to a string via fieldMap
-func (i *itemFields) getField(k int) float64 {
+func (i *ItemFields) GetField(k int) float64 {
 	u := uint8(k)
 	ok := i.fieldBitset.Test(uint(k))
 	if !ok {
@@ -45,7 +45,7 @@ func (i *itemFields) getField(k int) float64 {
 
 // Returns whether or not it was updated or set new,
 // where true is updated.
-func (i *itemFields) setField(k int, val float64) bool {
+func (i *ItemFields) setField(k int, val float64) bool {
 	u := uint8(k)
 	ok := i.fieldBitset.Test(uint(k))
 	if ok {
@@ -82,7 +82,7 @@ func (i *itemFields) setField(k int, val float64) bool {
 }
 
 // Returns number of updated or new fields.
-func (i *itemFields) setFields(ks []int, vals []float64) int {
+func (i *ItemFields) setFields(ks []int, vals []float64) int {
 	// Create an array for the new fields.
 	var numFields int = len(ks)
 	var numNewFields int
@@ -159,7 +159,7 @@ func (i *itemFields) setFields(ks []int, vals []float64) int {
 	return updatedFields
 }
 
-func (i *itemFields) deleteField(k int) {
+func (i *ItemFields) deleteField(k int) {
 	u := uint8(k)
 	ok := i.fieldBitset.Test(uint(k))
 	if !ok {
@@ -191,7 +191,7 @@ func (i *itemFields) deleteField(k int) {
 
 // Returns the number of bytes it takes to store
 // the fields for this item in memory.
-func (i *itemFields) weight() int {
+func (i *ItemFields) weight() int {
 	// 4 for float32, 1 for uint8
 	return 5*len(i.fieldIndexes) + int(i.fieldBitset.BinaryStorageSize())
 }

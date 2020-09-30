@@ -64,7 +64,7 @@ type scanWriter struct {
 type ScanWriterParams struct {
 	id              string
 	o               geojson.Object
-	fields          []float64
+	fields          *collection.ItemFields
 	distance        float64
 	noLock          bool
 	ignoreGlobMatch bool
@@ -194,7 +194,7 @@ func (sw *scanWriter) writeFoot() {
 	}
 }
 
-func (sw *scanWriter) fieldMatch(fields []float64, o geojson.Object) (fvals []float64, match bool) {
+func (sw *scanWriter) fieldMatch(fields *collection.ItemFields, o geojson.Object) (fvals []float64, match bool) {
 	var z float64
 	var gotz bool
 	fvals = sw.fvals
@@ -214,9 +214,7 @@ func (sw *scanWriter) fieldMatch(fields []float64, o geojson.Object) (fvals []fl
 			var value float64
 			idx, ok := sw.fmap[where.field]
 			if ok {
-				if len(fields) > idx {
-					value = fields[idx]
-				}
+				value = fields.GetField(idx)
 			}
 			if !where.match(value) {
 				return
@@ -226,9 +224,7 @@ func (sw *scanWriter) fieldMatch(fields []float64, o geojson.Object) (fvals []fl
 			var value float64
 			idx, ok := sw.fmap[wherein.field]
 			if ok {
-				if len(fields) > idx {
-					value = fields[idx]
-				}
+				value = fields.GetField(idx)
 			}
 			if !wherein.match(value) {
 				return
@@ -237,11 +233,7 @@ func (sw *scanWriter) fieldMatch(fields []float64, o geojson.Object) (fvals []fl
 		for _, whereval := range sw.whereevals {
 			fieldsWithNames := make(map[string]float64)
 			for field, idx := range sw.fmap {
-				if idx < len(fields) {
-					fieldsWithNames[field] = fields[idx]
-				} else {
-					fieldsWithNames[field] = 0
-				}
+				fieldsWithNames[field] = fields.GetField(idx)
 			}
 			if !whereval.match(fieldsWithNames) {
 				return
@@ -249,10 +241,7 @@ func (sw *scanWriter) fieldMatch(fields []float64, o geojson.Object) (fvals []fl
 		}
 	} else {
 		for idx := range sw.farr {
-			var value float64
-			if len(fields) > idx {
-				value = fields[idx]
-			}
+			var value float64 = fields.GetField(idx)
 			sw.fvals[idx] = value
 		}
 		for _, where := range sw.wheres {
@@ -289,11 +278,7 @@ func (sw *scanWriter) fieldMatch(fields []float64, o geojson.Object) (fvals []fl
 		for _, whereval := range sw.whereevals {
 			fieldsWithNames := make(map[string]float64)
 			for field, idx := range sw.fmap {
-				if idx < len(fields) {
-					fieldsWithNames[field] = fields[idx]
-				} else {
-					fieldsWithNames[field] = 0
-				}
+				fieldsWithNames[field] = fields.GetField(idx)
 			}
 			if !whereval.match(fieldsWithNames) {
 				return
@@ -337,7 +322,7 @@ func (sw *scanWriter) Step(n uint64) {
 
 // ok is whether the object passes the test and should be written
 // keepGoing is whether there could be more objects to test
-func (sw *scanWriter) testObject(id string, o geojson.Object, fields []float64, ignoreGlobMatch bool) (
+func (sw *scanWriter) testObject(id string, o geojson.Object, fields *collection.ItemFields, ignoreGlobMatch bool) (
 	ok, keepGoing bool, fieldVals []float64) {
 	if !ignoreGlobMatch {
 		match, kg := sw.globMatch(id, o)
@@ -349,7 +334,7 @@ func (sw *scanWriter) testObject(id string, o geojson.Object, fields []float64, 
 	return ok, true, nf
 }
 
-//id string, o geojson.Object, fields []float64, noLock bool
+//id string, o geojson.Object, fields *collection.ItemFields, noLock bool
 func (sw *scanWriter) writeObject(opts ScanWriterParams) bool {
 	if !opts.noLock {
 		sw.mu.Lock()
@@ -385,14 +370,12 @@ func (sw *scanWriter) writeObject(opts ScanWriterParams) bool {
 					jsfields = `,"fields":{`
 					var i int
 					for field, idx := range sw.fmap {
-						if len(opts.fields) > idx {
-							if opts.fields[idx] != 0 {
-								if i > 0 {
-									jsfields += `,`
-								}
-								jsfields += jsonString(field) + ":" + strconv.FormatFloat(opts.fields[idx], 'f', -1, 64)
-								i++
+						if opts.fields.GetField(idx) != 0 {
+							if i > 0 {
+								jsfields += `,`
 							}
+							jsfields += jsonString(field) + ":" + strconv.FormatFloat(opts.fields.GetField(idx), 'f', -1, 64)
+							i++
 						}
 					}
 					jsfields += `}`
@@ -405,11 +388,7 @@ func (sw *scanWriter) writeObject(opts ScanWriterParams) bool {
 						jsfields += `,`
 					}
 					j := sw.fmap[name]
-					if j < len(opts.fields) {
-						jsfields += strconv.FormatFloat(opts.fields[j], 'f', -1, 64)
-					} else {
-						jsfields += "0"
-					}
+					jsfields += strconv.FormatFloat(opts.fields.GetField(j), 'f', -1, 64)
 				}
 				jsfields += `]`
 			}

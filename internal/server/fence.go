@@ -10,6 +10,7 @@ import (
 	"github.com/tidwall/geojson/geo"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/tile38/internal/collection"
 	"github.com/tidwall/tile38/internal/glob"
 )
 
@@ -171,10 +172,11 @@ func fenceMatch(
 	sw.fmap = details.fmap
 	sw.fullFields = true
 	sw.msg.OutputType = JSON
+	panic("no fence support")
 	sw.writeObject(ScanWriterParams{
-		id:       details.id,
-		o:        details.obj,
-		fields:   details.fields,
+		id: details.id,
+		o:  details.obj,
+		// fields:   details.fields,
 		noLock:   true,
 		distance: distance,
 	})
@@ -279,7 +281,7 @@ func extendRoamMessage(
 			}
 			pattern := match.id + fence.roam.scan
 			iterator := func(
-				oid string, o geojson.Object, fields []float64,
+				oid string, o geojson.Object, fields *collection.ItemFields,
 			) bool {
 				if oid == match.id {
 					return true
@@ -367,7 +369,7 @@ func fenceMatchNearbys(
 		Max: geometry.Point{X: maxLon, Y: maxLat},
 	}
 	col.Intersects(geojson.NewRect(rect), 0, nil, nil, func(
-		id2 string, obj2 geojson.Object, fields []float64,
+		id2 string, obj2 geojson.Object, fields *collection.ItemFields,
 	) bool {
 		if s.hasExpired(fence.roam.key, id2) {
 			return true // skip expired
