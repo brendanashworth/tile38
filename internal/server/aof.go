@@ -85,9 +85,9 @@ func (s *Server) loadAOF() error {
 			}
 			if len(args) > 0 {
 				var msg Message
-				msg.Args = msg.Args[:0]
-				for _, arg := range args {
-					msg.Args = append(msg.Args, string(arg))
+				msg.Args = make([]string, len(args))
+				for i, arg := range args {
+					msg.Args[i] = string(arg)
 				}
 				if _, _, err := s.command(&msg, nil); err != nil {
 					if commandErrIsFatal(err) {

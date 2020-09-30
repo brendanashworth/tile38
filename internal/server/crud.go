@@ -754,7 +754,6 @@ func (server *Server) cmdSet(msg *Message, resetExpires bool) (res resp.Value, d
 	}
 	start := time.Now()
 	vs := msg.Args[1:]
-	var fmap map[string]int
 	var fields []string
 	var values []float64
 	var xx, nx bool
@@ -786,11 +785,7 @@ func (server *Server) cmdSet(msg *Message, resetExpires bool) (res resp.Value, d
 	d.timestamp = time.Now()
 	if msg.ConnType != Null || msg.OutputType != Null {
 		// likely loaded from aof at server startup, ignore field remapping.
-		fmap = col.FieldMap()
-		d.fmap = make(map[string]int)
-		for key, idx := range fmap {
-			d.fmap[key] = idx
-		}
+		d.fmap = col.FieldMap()
 	}
 	if ex != nil {
 		server.expireAt(d.key, d.id, d.timestamp.Add(time.Duration(float64(time.Second)*(*ex))))
@@ -890,11 +885,7 @@ func (server *Server) cmdFset(msg *Message) (res resp.Value, d commandDetails, e
 		d.command = "fset"
 		d.timestamp = time.Now()
 		d.updated = updateCount > 0
-		fmap := col.FieldMap()
-		d.fmap = make(map[string]int)
-		for key, idx := range fmap {
-			d.fmap[key] = idx
-		}
+		d.fmap = col.FieldMap()
 	}
 
 	switch msg.OutputType {
