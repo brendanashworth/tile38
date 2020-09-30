@@ -240,10 +240,6 @@ func (sw *scanWriter) fieldMatch(fields *collection.ItemFields, o geojson.Object
 			}
 		}
 	} else {
-		for idx := range sw.farr {
-			var value float64 = fields.GetField(idx)
-			sw.fvals[idx] = value
-		}
 		for _, where := range sw.wheres {
 			if where.field == "z" {
 				if !gotz {
@@ -259,7 +255,7 @@ func (sw *scanWriter) fieldMatch(fields *collection.ItemFields, o geojson.Object
 			var value float64
 			idx, ok := sw.fmap[where.field]
 			if ok {
-				value = sw.fvals[idx]
+				value = fields.GetField(idx)
 			}
 			if !where.match(value) {
 				return
@@ -269,7 +265,7 @@ func (sw *scanWriter) fieldMatch(fields *collection.ItemFields, o geojson.Object
 			var value float64
 			idx, ok := sw.fmap[wherein.field]
 			if ok {
-				value = sw.fvals[idx]
+				value = fields.GetField(idx)
 			}
 			if !wherein.match(value) {
 				return
