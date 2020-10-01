@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/Shopify/sarama v1.26.4
 	github.com/aws/aws-sdk-go v1.34.29
+	github.com/brendanashworth/geoindex v1.4.0
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/golang/protobuf v1.4.2
@@ -18,10 +19,11 @@ require (
 	github.com/tidwall/btree v0.0.0-20191029221954-400434d76274
 	github.com/tidwall/buntdb v1.1.0
 	github.com/tidwall/cities v0.0.0-20190730194520-dbe1ae0b862c // indirect
-	github.com/tidwall/geoindex v1.1.0
+	github.com/tidwall/geoindex v1.4.0 // indirect
 	github.com/tidwall/geojson v1.2.3
 	github.com/tidwall/gjson v1.6.1
 	github.com/tidwall/grect v0.0.0-20161006141115-ba9a043346eb // indirect
+	github.com/tidwall/lotsa v1.0.1 // indirect
 	github.com/tidwall/match v1.0.1
 	github.com/tidwall/pretty v1.0.2
 	github.com/tidwall/rbang v1.2.2
@@ -33,6 +35,7 @@ require (
 	github.com/tidwall/sjson v1.1.1
 	github.com/tidwall/tinybtree v0.0.0-20181217131827-de5932d649b5
 	github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563 // indirect
+	github.com/willf/bitset v1.1.11
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
 	golang.org/x/crypto v0.0.0-20200204104054-c9f3fb736b72
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2

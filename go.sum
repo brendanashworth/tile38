@@ -12,6 +12,8 @@ github.com/aws/aws-sdk-go v1.17.14 h1:IjqZDIQoLyZ48A93BxVrZOaIGgZPRi4nXt6WQUMJpl
 github.com/aws/aws-sdk-go v1.17.14/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.34.29 h1:4Yw8eC4nCXiIVmHJO5PD4oh0vI/df5o6cYTVzFV7vWA=
 github.com/aws/aws-sdk-go v1.34.29/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/+8rV9s48=
+github.com/brendanashworth/geoindex v1.4.0 h1:fy+I8VN66NM0zBOH4C23lldndwzJH8fUC5aUPvgeUx0=
+github.com/brendanashworth/geoindex v1.4.0/go.mod h1:chVoiVIeHE1KY0gy54YivOdjEmIvcRefN/GELQnhkbI=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
@@ -199,6 +201,8 @@ github.com/tidwall/tinybtree v1.0.1 h1:g1kLLw/dCJgtH14AFqUoob0MtSfThw4xQILCGMQd8
 github.com/tidwall/tinybtree v1.0.1/go.mod h1:0aFQG6KLQz3j57CeVgXlmKO3RSQ3myhJn2H+r84IgSY=
 github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563 h1:Otn9S136ELckZ3KKDyCkxapfufrqDqwmGjcHfAyXRrE=
 github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563/go.mod h1:mLqSmt7Dv/CNneF2wfcChfN1rvapyQr01LGKnKex0DQ=
+github.com/willf/bitset v1.1.11 h1:N7Z7E9UvjW+sGsEl7k/SJrvY2reP1A07MrGuCjIOjRE=
+github.com/willf/bitset v1.1.11/go.mod h1:83CECat5yLh5zVOf4P1ErAgKA5UDvKtgyUABdr3+MjI=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v1.0.0/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=
 github.com/yuin/gopher-lua v0.0.0-20170915035107-eb1c7299435c h1:BXhbeVl63cTUicr+Q/D0/BNPw59IsIcyv2cB1/xHRps=

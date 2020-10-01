@@ -37,6 +37,8 @@ github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/service/sqs
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
+# github.com/brendanashworth/geoindex v1.4.0
+github.com/brendanashworth/geoindex
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
 # github.com/davecgh/go-spew v1.1.1
@@ -96,8 +98,10 @@ github.com/streadway/amqp
 github.com/tidwall/btree
 # github.com/tidwall/buntdb v1.1.0
 github.com/tidwall/buntdb
-# github.com/tidwall/geoindex v1.1.0
-github.com/tidwall/geoindex
+# github.com/tidwall/cities v0.0.0-20190730194520-dbe1ae0b862c
+github.com/tidwall/cities
+# github.com/tidwall/geoindex v1.4.0
+github.com/tidwall/geoindex/algo
 github.com/tidwall/geoindex/child
 # github.com/tidwall/geojson v1.2.3
 github.com/tidwall/geojson
@@ -107,6 +111,8 @@ github.com/tidwall/geojson/geometry
 github.com/tidwall/gjson
 # github.com/tidwall/grect v0.0.0-20161006141115-ba9a043346eb
 github.com/tidwall/grect
+# github.com/tidwall/lotsa v1.0.1
+github.com/tidwall/lotsa
 # github.com/tidwall/match v1.0.1
 github.com/tidwall/match
 # github.com/tidwall/pretty v1.0.2
@@ -130,6 +136,8 @@ github.com/tidwall/sjson
 github.com/tidwall/tinybtree
 # github.com/tidwall/tinyqueue v0.0.0-20180302190814-1e39f5511563
 github.com/tidwall/tinyqueue
+# github.com/willf/bitset v1.1.11
+github.com/willf/bitset
 # github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
 github.com/yuin/gopher-lua
 github.com/yuin/gopher-lua/ast
